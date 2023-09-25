@@ -27,6 +27,7 @@
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 static struct list ready_list;
+static struct list sleep_list;
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -108,6 +109,7 @@ thread_init (void) {
 	/* Init the globla thread context */
 	lock_init (&tid_lock);
 	list_init (&ready_list);
+	list_init (&sleep_list);
 	list_init (&destruction_req);
 
 	/* Set up a thread structure for the running thread. */
@@ -587,4 +589,44 @@ allocate_tid (void) {
 	lock_release (&tid_lock);
 
 	return tid;
+}
+
+void thread_sleep(int64_t sleep_tick){
+	struct thread *cur_t = thread_current();
+	enum intr_level old_level;
+	
+	ASSERT(cur_t != idle_thread);
+
+	old_level = intr_disable();
+	cur_t -> wake_up_tick = sleep_tick;
+
+	list_insert_ordered(&sleep_list, &cur_t->elem, order_by_tick, NULL);
+	thread_block();    // Interrupt Off 상태여야함 
+
+	intr_set_level(old_level);
+}
+
+bool order_by_tick(const struct list_elem *a, const struct list_elem *b, void *aux) {
+    struct thread *thread_a = list_entry(a, struct thread, elem);
+    struct thread *thread_b = list_entry(b, struct thread, elem);
+
+    return thread_a->wake_up_tick < thread_b->wake_up_tick;
+}
+
+void thread_wakeup(int64_t cur_tick){
+	struct list_elem *e;
+	struct thread *t;
+
+	if(!list_empty(&sleep_list)){
+		for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
+			t = list_entry(e, struct thread, elem);
+			
+			if(t -> wake_up_tick <= cur_tick){
+				list_pop_front(&sleep_list);
+				thread_unblock(t);
+			} else {
+				break;
+			}
+		}
+	}
 }
