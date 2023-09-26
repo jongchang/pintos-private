@@ -178,9 +178,7 @@ thread_print_stats (void) {
    The code provided sets the new thread's `priority' member to
    PRIORITY, but no actual priority scheduling is implemented.
    Priority scheduling is the goal of Problem 1-3. */
-tid_t
-thread_create (const char *name, int priority,
-		thread_func *function, void *aux) {
+tid_t thread_create (const char *name, int priority, thread_func *function, void *aux) {
 	struct thread *t;
 	tid_t tid;
 
@@ -208,6 +206,7 @@ thread_create (const char *name, int priority,
 
 	/* Add to run queue. */
 	thread_unblock (t);
+	cmp_cur_and_ready(t);
 
 	return tid;
 }
@@ -242,7 +241,7 @@ thread_unblock (struct thread *t) {
 
 	old_level = intr_disable ();
 	ASSERT (t->status == THREAD_BLOCKED);
-	list_insert_ordered(&ready_list, &curr->elem, order_by_priority, NULL);
+	list_insert_ordered(&ready_list, &t->elem, order_by_priority, NULL);
 	t->status = THREAD_READY;
 	intr_set_level (old_level);
 }
@@ -313,7 +312,11 @@ thread_yield (void) {
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) {
+	struct list_elem *e;
+	struct thread *t = list_entry(list_begin(&ready_list), struct thread, elem);
+
 	thread_current ()->priority = new_priority;
+	cmp_cur_and_ready(t);
 }
 
 /* Returns the current thread's priority. */
@@ -635,5 +638,13 @@ void thread_wakeup(int64_t cur_tick){
 				break;
 			}
 		}
+	}
+}
+
+void cmp_cur_and_ready(struct thread *t){
+	struct thread *cur_t = thread_current();
+
+	if(cur_t -> priority < t -> priority){
+		thread_yield();
 	}
 }

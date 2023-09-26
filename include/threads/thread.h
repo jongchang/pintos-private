@@ -148,5 +148,6 @@ void thread_sleep(int64_t sleep_tick);
 void thread_wakeup(int64_t cur_tick);
 bool order_by_tick(const struct list_elem *a, const struct list_elem *b, void *aux);
 bool order_by_priority(const struct list_elem *a, const struct list_elem *b, void *aux);
+void cmp_cur_and_ready(struct thread *ready_thread);
 
 #endif /* threads/thread.h */
