@@ -206,7 +206,7 @@ tid_t thread_create (const char *name, int priority, thread_func *function, void
 
 	/* Add to run queue. */
 	thread_unblock (t);
-	cmp_cur_and_ready(t);
+	cmp_cur_and_ready();
 
 	return tid;
 }
@@ -312,11 +312,8 @@ thread_yield (void) {
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) {
-	struct list_elem *e;
-	struct thread *t = list_entry(list_begin(&ready_list), struct thread, elem);
-
 	thread_current ()->priority = new_priority;
-	cmp_cur_and_ready(t);
+	cmp_cur_and_ready();
 }
 
 /* Returns the current thread's priority. */
@@ -641,8 +638,9 @@ void thread_wakeup(int64_t cur_tick){
 	}
 }
 
-void cmp_cur_and_ready(struct thread *t){
+void cmp_cur_and_ready(){
 	struct thread *cur_t = thread_current();
+	struct thread *t = list_entry(list_begin(&ready_list), struct thread, elem);
 
 	if(cur_t -> priority < t -> priority){
 		thread_yield();
