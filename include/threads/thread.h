@@ -92,6 +92,11 @@ struct thread {
 	char name[16];                      /* Name (for debugging purposes). */
 	int priority;                       /* Priority. */
 	int64_t wake_up_tick;
+	
+	int org_priority;
+	struct lock lock_on_wait;
+	struct list donations;
+	struct list_elem delem;
 
 	/* Shared between thread.c and synch.c. */
 	struct list_elem elem;              /* List element. */
@@ -149,5 +154,6 @@ void thread_wakeup(int64_t cur_tick);
 bool order_by_tick(const struct list_elem *a, const struct list_elem *b, void *aux);
 bool order_by_priority(const struct list_elem *a, const struct list_elem *b, void *aux);
 void cmp_cur_and_ready();
+struct thread *get_thread(struct list_elem *e);
 
 #endif /* threads/thread.h */

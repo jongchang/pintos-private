@@ -646,3 +646,7 @@ void cmp_cur_and_ready(){
 		thread_yield();
 	}
 }
+
+struct thread *get_thread(struct list_elem *e){
+	return list_entry(e, struct thread, elem);
+}
