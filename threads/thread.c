@@ -411,6 +411,10 @@ init_thread (struct thread *t, const char *name, int priority) {
 	t->tf.rsp = (uint64_t) t + PGSIZE - sizeof (void *);
 	t->priority = priority;
 	t->magic = THREAD_MAGIC;
+
+	t->org_priority = priority;
+	t->wait_on_lock = NULL;
+	list_init(&t->donations);
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should
@@ -423,7 +427,7 @@ next_thread_to_run (void) {
 	if (list_empty (&ready_list))
 		return idle_thread;
 	else
-		return list_entry (list_pop_front (&ready_list), struct thread, elem);
+		return get_thread(list_pop_front (&ready_list));
 }
 
 /* Use iretq to launch the thread */
@@ -532,8 +536,7 @@ do_schedule(int status) {
 	ASSERT (intr_get_level () == INTR_OFF);
 	ASSERT (thread_current()->status == THREAD_RUNNING);
 	while (!list_empty (&destruction_req)) {
-		struct thread *victim =
-			list_entry (list_pop_front (&destruction_req), struct thread, elem);
+		struct thread *victim = get_thread(list_pop_front (&destruction_req));
 		palloc_free_page(victim);
 	}
 	thread_current ()->status = status;
@@ -607,15 +610,15 @@ void thread_sleep(int64_t sleep_tick){
 }
 
 bool order_by_tick(const struct list_elem *a, const struct list_elem *b, void *aux) {
-    struct thread *thread_a = list_entry(a, struct thread, elem);
-    struct thread *thread_b = list_entry(b, struct thread, elem);
+    struct thread *thread_a = get_thread(a);
+    struct thread *thread_b = get_thread(b);
 
     return thread_a->wake_up_tick < thread_b->wake_up_tick;
 }
 
 bool order_by_priority(const struct list_elem *a, const struct list_elem *b, void *aux) {
-    struct thread *thread_a = list_entry(a, struct thread, elem);
-    struct thread *thread_b = list_entry(b, struct thread, elem);
+    struct thread *thread_a = get_thread(a);
+    struct thread *thread_b = get_thread(b);
 
     return thread_a->priority > thread_b->priority;
 }
@@ -626,7 +629,7 @@ void thread_wakeup(int64_t cur_tick){
 
 	if(!list_empty(&sleep_list)){
 		for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
-			t = list_entry(e, struct thread, elem);
+			t = get_thread(e); 
 			
 			if(t -> wake_up_tick <= cur_tick){
 				list_pop_front(&sleep_list);
@@ -640,7 +643,7 @@ void thread_wakeup(int64_t cur_tick){
 
 void cmp_cur_and_ready(){
 	struct thread *cur_t = thread_current();
-	struct thread *t = list_entry(list_begin(&ready_list), struct thread, elem);
+	struct thread *t = get_thread(list_begin(&ready_list)); 
 
 	if(cur_t -> priority < t -> priority){
 		thread_yield();
