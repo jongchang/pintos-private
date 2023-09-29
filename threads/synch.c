@@ -102,8 +102,7 @@ sema_try_down (struct semaphore *sema) {
    and wakes up one thread of those waiting for SEMA, if any.
 
    This function may be called from an interrupt handler. */
-void
-sema_up (struct semaphore *sema) {
+void sema_up (struct semaphore *sema) {
 	enum intr_level old_level;
 
 	ASSERT (sema != NULL);
@@ -185,14 +184,25 @@ lock_init (struct lock *lock) {
    interrupt handler.  This function may be called with
    interrupts disabled, but interrupts will be turned back on if
    we need to sleep. */
-void
-lock_acquire (struct lock *lock) {
+void lock_acquire (struct lock *lock) {
 	ASSERT (lock != NULL);
 	ASSERT (!intr_context ());
 	ASSERT (!lock_held_by_current_thread (lock));
 
+	struct thread *cur_t = thread_current();
+
+	if(lock -> holder){
+		cur_t -> wait_on_lock = lock;
+
+		if(lock -> holder -> priority < cur_t -> priority){
+			list_insert_ordered(&lock -> holder -> donations, &cur_t -> delem, order_by_priority, NULL);
+			donate_priority(cur_t);
+		}
+	}
+
 	sema_down (&lock->semaphore);
-	lock->holder = thread_current ();
+	cur_t -> wait_on_lock = NULL;
+	lock -> holder = cur_t;
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -220,13 +230,51 @@ lock_try_acquire (struct lock *lock) {
    An interrupt handler cannot acquire a lock, so it does not
    make sense to try to release a lock within an interrupt
    handler. */
-void
-lock_release (struct lock *lock) {
+void lock_release (struct lock *lock) {
 	ASSERT (lock != NULL);
 	ASSERT (lock_held_by_current_thread (lock));
 
-	lock->holder = NULL;
+	// 1. lock holder 다음 대기자의 우선순위를 올려줘야함 (o) line:248
+	// 2. lock holder 의 우선순위는 원래대로 복구 해줘야함 (o) line:271
+	// 3. lock holder가 가진 donations 제거해줘야함 (o) line:256
+	// 4. donation list에 있는 thread의 wait_on_lock과 현재 release하는 lock이 같다면 (x)
+
+	// holder가 release 해주는애임
+
+	if(!list_empty(&lock -> semaphore.waiters)){
+ 		struct thread *next_waiter = get_thread(list_begin(&lock -> semaphore.waiters));
+
+		// waiters의 첫 요소의 priority 확인해서 release 하는 thread보다 작으면
+		if(next_waiter -> priority < lock -> holder -> priority){ 
+			next_waiter -> priority = lock -> holder -> priority;
+		}
+	}
+
+	struct list *donations = &lock -> holder -> donations;
+	struct thread *t;
+
+	if(!list_empty(donations)){
+		struct thread *cur_t = get_thread_delem(list_begin(donations));
+		struct thread *last_t = get_thread_delem(list_end(donations));
+
+		while(last_t != cur_t){
+			if(lock == cur_t -> wait_on_lock){
+				list_remove(&cur_t -> delem);
+				break;
+			}
+
+			cur_t = get_thread_delem(list_next(&cur_t -> delem));
+		}
+	}
+
+	// release할 thread orginal priority로 복귀
+	lock -> holder -> priority = lock -> holder -> org_priority;
+	lock -> holder = NULL;
 	sema_up (&lock->semaphore);
+}
+
+struct thread *get_thread_delem(struct list_elem *e){
+	return list_entry(e, struct thread, delem);
 }
 
 /* Returns true if the current thread holds LOCK, false
@@ -326,6 +374,28 @@ cond_broadcast (struct condition *cond, struct lock *lock) {
 
 	while (!list_empty (&cond->waiters))
 		cond_signal (cond, lock);
+}
+
+void donate_priority(struct thread *cur_t) {
+	int donor_priority = cur_t -> priority;
+	struct thread* holder;
+
+	while(cur_t -> wait_on_lock){
+		holder = cur_t -> wait_on_lock -> holder;
+		holder -> priority = donor_priority;
+		cur_t = holder;
+	}
+}
+
+void print_current(){
+	struct thread *t = thread_current();
+
+	printf("Name = %s, Priority = %d, Donated Priority = %d Is_Lock? = %s\n"
+	, t -> name
+	, t -> priority
+	, t -> org_priority
+	, t -> wait_on_lock == NULL ? "lock" : "unlock"
+	);
 }
 
 // bool cmp_sema_priority(const struct list_elem *a, const struct list_elem *b, void *aux UNUSED)

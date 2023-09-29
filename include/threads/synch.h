@@ -37,8 +37,10 @@ void cond_init (struct condition *);
 void cond_wait (struct condition *, struct lock *);
 void cond_signal (struct condition *, struct lock *);
 void cond_broadcast (struct condition *, struct lock *);
-bool sema_compare_priority (const struct list_elem *l, const struct list_elem *s, void *aux);
-//bool cmp_sema_priority(const struct list_elem *a, const struct list_elem *b, void *aux);
+void donate_priority(struct thread *cur_t);
+struct thread *get_thread_delem(struct list_elem *e);
+
+void print_current();
 
 /* Optimization barrier.
  *

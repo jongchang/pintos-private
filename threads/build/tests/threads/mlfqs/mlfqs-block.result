@@ -1,25 +1,12 @@
 FAIL
-Test output failed to match any acceptable form.
-
-Acceptable output:
-  (mlfqs-block) begin
-  (mlfqs-block) Main thread acquiring lock.
-  (mlfqs-block) Main thread creating block thread, sleeping 25 seconds...
-  (mlfqs-block) Block thread spinning for 20 seconds...
-  (mlfqs-block) Block thread acquiring lock...
-  (mlfqs-block) Main thread spinning for 5 seconds...
-  (mlfqs-block) Main thread releasing lock.
-  (mlfqs-block) ...got it.
-  (mlfqs-block) Block thread should have already acquired lock.
-  (mlfqs-block) end
-Differences in `diff -u' format:
-  (mlfqs-block) begin
-  (mlfqs-block) Main thread acquiring lock.
-  (mlfqs-block) Main thread creating block thread, sleeping 25 seconds...
-  (mlfqs-block) Block thread spinning for 20 seconds...
-  (mlfqs-block) Block thread acquiring lock...
-  (mlfqs-block) Main thread spinning for 5 seconds...
-  (mlfqs-block) Main thread releasing lock.
-- (mlfqs-block) ...got it.
-  (mlfqs-block) Block thread should have already acquired lock.
-  (mlfqs-block) end
+Kernel panic in run: PANIC at ../../threads/interrupt.c:361 in intr_handler(): Unexpected interrupt
+Call stack: 0x8004214306 0x8004208d69 0x800420914c 0x8004211659 0x800420df4a 0x80042068b0 0x8004206847 0x8004206148
+Translation of call stack:
+0x0000008004214306: debug_panic (lib/kernel/debug.c:32)
+0x0000008004208d69: intr_handler (threads/interrupt.c:365)
+0x000000800420914c: intr_entry (intr-stubs.o:?)
+0x0000008004211659: printf (lib/stdio.c:80)
+0x000000800420df4a: kbd_print_stats (devices/kbd.c:38)
+0x00000080042068b0: print_stats (threads/init.c:365)
+0x0000008004206847: power_off (threads/init.c:347)
+0x0000008004206148: main (threads/init.c:127)
