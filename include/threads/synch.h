@@ -39,6 +39,7 @@ void cond_signal (struct condition *, struct lock *);
 void cond_broadcast (struct condition *, struct lock *);
 void donate_priority(struct thread *cur_t);
 struct thread *get_thread_delem(struct list_elem *e);
+bool order_by_priority_delem(const struct list_elem *a, const struct list_elem *b, void *aux);
 
 void print_current();
 

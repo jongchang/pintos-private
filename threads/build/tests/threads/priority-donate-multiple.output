@@ -11,7 +11,7 @@ Booting from Hard Disk..Kernel command line: -q run priority-donate-multiple
 Pintos booting with: 
 	base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
 	ext_mem: 0x100000 ~ 0x13e0000 (Usable: 19,328 kB)
-Calibrating timer...  73,625,600 loops/s.
+Calibrating timer...  130,867,200 loops/s.
 Boot complete.
 Executing 'priority-donate-multiple':
 (priority-donate-multiple) begin
@@ -20,15 +20,15 @@ Executing 'priority-donate-multiple':
 (priority-donate-multiple) Thread b acquired lock b.
 (priority-donate-multiple) Thread b finished.
 (priority-donate-multiple) Thread b should have just finished.
-(priority-donate-multiple) Main thread should have priority 32.  Actual priority: 31.
+(priority-donate-multiple) Main thread should have priority 32.  Actual priority: 32.
 (priority-donate-multiple) Thread a acquired lock a.
 (priority-donate-multiple) Thread a finished.
 (priority-donate-multiple) Thread a should have just finished.
 (priority-donate-multiple) Main thread should have priority 31.  Actual priority: 31.
 (priority-donate-multiple) end
 Execution of 'priority-donate-multiple' complete.
-Timer: 34 ticks
-Thread: 0 idle ticks, 34 kernel ticks, 0 user ticks
-Console: 1144 characters output
+Timer: 32 ticks
+Thread: 0 idle ticks, 32 kernel ticks, 0 user ticks
+Console: 1145 characters output
 Keyboard: 0 keys pressed
 Powering off...

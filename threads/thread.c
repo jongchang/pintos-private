@@ -295,8 +295,7 @@ thread_exit (void) {
 
 /* Yields the CPU.  The current thread is not put to sleep and
    may be scheduled again immediately at the scheduler's whim. */
-void
-thread_yield (void) {
+void thread_yield (void) {
 	struct thread *curr = thread_current ();
 	enum intr_level old_level;
 
@@ -543,8 +542,7 @@ do_schedule(int status) {
 	schedule ();
 }
 
-static void
-schedule (void) {
+static void schedule (void) {
 	struct thread *curr = running_thread ();
 	struct thread *next = next_thread_to_run ();
 
@@ -638,6 +636,17 @@ void thread_wakeup(int64_t cur_tick){
 void cmp_cur_and_ready(){
 	struct thread *cur_t = thread_current();
 	struct thread *t = get_thread(list_begin(&ready_list)); 
+
+	// Problem) 이거 넣고 priority-donate-multiple1, 2 2개 (PASS) & priority-change 1개(FAIL)
+	if(list_empty(&cur_t -> donations)){
+		cur_t -> priority = cur_t -> org_priority;
+	} else {
+		int highest = get_thread_delem(list_front(&cur_t -> donations)) -> priority;
+		
+		if(highest > cur_t -> priority){
+			cur_t -> priority = highest;
+		}
+	}
 
 	if(cur_t -> priority < t -> priority){
 		thread_yield();
