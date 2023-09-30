@@ -309,9 +309,14 @@ void thread_yield (void) {
 }
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
-void
-thread_set_priority (int new_priority) {
-	thread_current ()->priority = new_priority;
+void thread_set_priority (int new_priority) {
+	struct thread *cur_t = thread_current ();
+	
+	cur_t -> priority = new_priority;
+	// 이 녀석이 만악의 근원(test code에서 직접적으로 바꿔주면서 org 값도 변경해줘야함)
+	cur_t -> org_priority = new_priority;
+
+	update_priority(cur_t);
 	cmp_cur_and_ready();
 }
 
@@ -635,20 +640,12 @@ void thread_wakeup(int64_t cur_tick){
 
 void cmp_cur_and_ready(){
 	struct thread *cur_t = thread_current();
-	struct thread *t = get_thread(list_begin(&ready_list)); 
+	struct thread *front = get_thread(list_begin(&ready_list)); 
 
 	// Problem) 이거 넣고 priority-donate-multiple1, 2 2개 (PASS) & priority-change 1개(FAIL)
-	if(list_empty(&cur_t -> donations)){
-		cur_t -> priority = cur_t -> org_priority;
-	} else {
-		int highest = get_thread_delem(list_front(&cur_t -> donations)) -> priority;
-		
-		if(highest > cur_t -> priority){
-			cur_t -> priority = highest;
-		}
-	}
+	update_priority(cur_t);
 
-	if(cur_t -> priority < t -> priority){
+	if(cur_t -> priority < front -> priority){
 		thread_yield();
 	}
 }

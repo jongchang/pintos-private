@@ -1,25 +1,13 @@
 FAIL
-Test output failed to match any acceptable form.
-
-Acceptable output:
-  (priority-donate-one) begin
-  (priority-donate-one) This thread should have priority 32.  Actual priority: 32.
-  (priority-donate-one) This thread should have priority 33.  Actual priority: 33.
-  (priority-donate-one) acquire2: got the lock
-  (priority-donate-one) acquire2: done
-  (priority-donate-one) acquire1: got the lock
-  (priority-donate-one) acquire1: done
-  (priority-donate-one) acquire2, acquire1 must already have finished, in that order.
-  (priority-donate-one) This should be the last line before finishing this test.
-  (priority-donate-one) end
-Differences in `diff -u' format:
-  (priority-donate-one) begin
-  (priority-donate-one) This thread should have priority 32.  Actual priority: 32.
-  (priority-donate-one) This thread should have priority 33.  Actual priority: 33.
-  (priority-donate-one) acquire2: got the lock
-  (priority-donate-one) acquire2: done
-- (priority-donate-one) acquire1: got the lock
-- (priority-donate-one) acquire1: done
-  (priority-donate-one) acquire2, acquire1 must already have finished, in that order.
-  (priority-donate-one) This should be the last line before finishing this test.
-  (priority-donate-one) end
+Kernel panic in run: PANIC at ../../threads/interrupt.c:361 in intr_handler(): Unexpected interrupt
+Call stack: 0x80042143e0 0x8004208da1 0x8004209184 0x8004207e1f 0x800420ec49 0x8004217b52 0x80042179a4 0x8004206860 0x8004206148
+Translation of call stack:
+0x00000080042143e0: debug_panic (lib/kernel/debug.c:32)
+0x0000008004208da1: intr_handler (threads/interrupt.c:365)
+0x0000008004209184: intr_entry (intr-stubs.o:?)
+0x0000008004207e1f: intr_set_level (threads/interrupt.c:131 (discriminator 1))
+0x000000800420ec49: serial_putc (devices/serial.c:123)
+0x0000008004217b52: putchar_have_lock (lib/kernel/console.c:176)
+0x00000080042179a4: puts (lib/kernel/console.c:133)
+0x0000008004206860: power_off (threads/init.c:348)
+0x0000008004206148: main (threads/init.c:127)

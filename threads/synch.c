@@ -249,27 +249,57 @@ void lock_release (struct lock *lock) {
 	// 	}
 	// }
 
-	struct list *donations = &lock -> holder -> donations;
+	struct thread *cur_t = lock -> holder;
+	struct list *donations = &cur_t -> donations;
 	struct thread *t;
 
 	if(!list_empty(donations)){
-		struct thread *cur_t = get_thread_delem(list_begin(donations));
-		struct thread *last_t = get_thread_delem(list_end(donations));
+		struct list_elem *e;
 
-		while(last_t != cur_t){
-			if(lock == cur_t -> wait_on_lock){
-				list_remove(&cur_t -> delem);
+		for (e = list_begin(donations); e != list_end(donations); e = list_next(e)){
+			t = get_thread_delem(e);
+			
+			if (t -> wait_on_lock == lock){
+			    list_remove(&t -> delem);
 				break;
 			}
-
-			cur_t = get_thread_delem(list_next(&cur_t -> delem));
 		}
+
+		// struct thread *cur_t = get_thread_delem(list_begin(donations));
+		// struct thread *last_t = get_thread_delem(list_end(donations));
+
+		// while(last_t != cur_t){
+		// 	if(lock == cur_t -> wait_on_lock){
+		// 		list_remove(&cur_t -> delem);
+		// 		break;
+		// 	}
+
+		// 	cur_t = get_thread_delem(list_next(&cur_t -> delem));
+		// }
 	}
 
 	// release할 thread orginal priority로 복귀
-	lock -> holder -> priority = lock -> holder -> org_priority;
+	// problem) priority-donate-one 해결되는 코드
+	update_priority(cur_t);
+	
 	lock -> holder = NULL;
 	sema_up (&lock->semaphore);
+}
+
+void update_priority(struct thread *cur_t){
+	struct list *donations = &cur_t -> donations;
+
+	cur_t -> priority = cur_t -> org_priority;
+
+	if(!list_empty(donations)) {
+		list_sort(donations, order_by_priority_delem, NULL);
+
+		struct thread *front = get_thread_delem(list_begin(donations));
+
+		if (front -> priority > cur_t -> priority){
+			cur_t -> priority = front -> priority;
+		}
+	}
 }
 
 bool order_by_priority_delem(const struct list_elem *a, const struct list_elem *b, void *aux) {
