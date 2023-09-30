@@ -606,7 +606,7 @@ void thread_sleep(int64_t sleep_tick){
 	cur_t -> wake_up_tick = sleep_tick;
 
 	list_insert_ordered(&sleep_list, &cur_t->elem, order_by_tick, NULL);
-	thread_block();    // Interrupt Off 상태여야함 
+	thread_block();
 
 	intr_set_level(old_level);
 }
@@ -623,16 +623,28 @@ void thread_wakeup(int64_t cur_tick){
 	struct list_elem *e;
 	struct thread *t;
 
-	if(!list_empty(&sleep_list)){
-		for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
-			t = get_thread(e); 
+	// Problem) alarm-simultaneous 문제 리스트 pop_front하고 list_next 한게 문제로 식별됨
+	// if(!list_empty(&sleep_list)){
+	// 	for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
+	// 		t = get_thread(e); 
 			
-			if(t -> wake_up_tick <= cur_tick){
-				list_pop_front(&sleep_list);
-				thread_unblock(t);
-			} else {
-				break;
-			}
+	// 		if(t -> wake_up_tick <= cur_tick){
+	// 			list_pop_front(&sleep_list);
+	// 			thread_unblock(t);
+	// 		} else {
+	// 			break;
+	// 		}
+	// 	}
+	// }
+
+	while(!list_empty(&sleep_list)){
+		t = get_thread(list_begin(&sleep_list));
+
+		if(t -> wake_up_tick <= cur_tick){
+			list_pop_front(&sleep_list);
+			thread_unblock(t);
+		} else {
+			break;
 		}
 	}
 }
