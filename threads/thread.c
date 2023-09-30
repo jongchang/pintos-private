@@ -316,7 +316,6 @@ void thread_set_priority (int new_priority) {
 	// 이 녀석이 만악의 근원(test code에서 직접적으로 바꿔주면서 org 값도 변경해줘야함)
 	cur_t -> org_priority = new_priority;
 
-	update_priority(cur_t);
 	cmp_cur_and_ready();
 }
 
