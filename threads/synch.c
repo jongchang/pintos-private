@@ -261,7 +261,11 @@ void lock_release (struct lock *lock) {
 			
 			if (t -> wait_on_lock == lock){
 			    list_remove(&t -> delem);
-				break;
+				// Problem) priority-donate-one 해결됨 donations에 여러개 있나????
+				// 정상 흐름) main -> acq2 -> acq1
+				// break 흐름) main -> acq2 -> main -> acq1
+				// 해당 lock에서 받은 donations 다 제거 안해서 ready_list에서 donate 받은 우선순위로 점유중이였음
+				//break; 
 			}
 		}
 
@@ -292,6 +296,7 @@ void update_priority(struct thread *cur_t){
 	cur_t -> priority = cur_t -> org_priority;
 
 	if(!list_empty(donations)) {
+		// set_priority 때문에 sort 해줘야 할듯 중간에 값 바꿔버리면 엉키는데
 		list_sort(donations, order_by_priority_delem, NULL);
 
 		struct thread *front = get_thread_delem(list_begin(donations));
