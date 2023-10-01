@@ -109,8 +109,8 @@ Executing 'mlfqs-load-60':
 (mlfqs-load-60) After 178 seconds, load average=0.00.
 (mlfqs-load-60) end
 Execution of 'mlfqs-load-60' complete.
-Timer: 18824 ticks
-Thread: 12797 idle ticks, 6028 kernel ticks, 0 user ticks
+Timer: 18825 ticks
+Thread: 12798 idle ticks, 6027 kernel ticks, 0 user ticks
 Console: 5342 characters output
 Keyboard: 0 keys pressed
 Powering off...
