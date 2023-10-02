@@ -612,11 +612,11 @@ void thread_sleep(int64_t sleep_tick){
 }
 
 bool order_by_tick(const struct list_elem *a, const struct list_elem *b, void *aux) {
-    return get_thread(a)->wake_up_tick < get_thread(b)->wake_up_tick;
+    return get_thread(a) -> wake_up_tick < get_thread(b) -> wake_up_tick;
 }
 
 bool order_by_priority(const struct list_elem *a, const struct list_elem *b, void *aux) {
-    return get_thread(a)->priority > get_thread(b)->priority;
+    return get_thread(a) -> priority > get_thread(b) -> priority;
 }
 
 void thread_wakeup(int64_t cur_tick){

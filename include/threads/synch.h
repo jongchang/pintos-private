@@ -40,6 +40,9 @@ void cond_broadcast (struct condition *, struct lock *);
 void donate_priority(struct thread *cur_t);
 struct thread *get_thread_delem(struct list_elem *e);
 bool order_by_priority_delem(const struct list_elem *a, const struct list_elem *b, void *aux);
+struct semaphore_elem *get_sema_elem(struct list_elem *e);
+bool order_by_priority_sema(const struct list_elem *a, const struct list_elem *b, void *aux);
+
 void update_priority(struct thread *cur_t);
 
 void print_current();
