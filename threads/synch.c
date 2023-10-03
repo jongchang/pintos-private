@@ -416,12 +416,8 @@ void update_priority(struct thread *cur_t){
 		// thread_set_priority 때문에 sort 해줘야 할듯 중간에 값 바꿔버리면 엉키는데
 		// list_sort 대신 list_insert_ordered 사용해도 될거 같은데 remove하고 다시 insert하는거랑 많이 차이날까?
 		list_sort(donations, order_by_priority_delem, NULL);
+		cur_t -> priority = get_thread_delem(list_begin(donations)) -> priority;
 
-		struct thread *front = get_thread_delem(list_begin(donations));
-
-		if (front -> priority > cur_t -> priority){
-			cur_t -> priority = front -> priority;
-		}
 	}
 }
 
