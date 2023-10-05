@@ -108,7 +108,6 @@ void sema_up (struct semaphore *sema) {
 
 	old_level = intr_disable ();
 	if (!list_empty (&sema->waiters)){
-		// Problem) sort 추가로 priority-donate-sema 해결: set_priority에서 변경되면서 깨지는거 같음
 		list_sort(&sema->waiters, order_by_priority, NULL);
 		thread_unblock(get_thread(list_pop_front(&sema->waiters)));
 	}
@@ -233,22 +232,6 @@ void lock_release (struct lock *lock) {
 	ASSERT (lock != NULL);
 	ASSERT (lock_held_by_current_thread (lock));
 
-	// 1. lock holder 다음 대기자의 우선순위를 올려줘야함 (o) line:248
-	// 2. lock holder 의 우선순위는 원래대로 복구 해줘야함 (o) line:271
-	// 3. lock holder가 가진 donations 제거해줘야함 (o) line:256
-	// 4. donation list에 있는 thread의 wait_on_lock과 현재 release하는 lock이 같다면 (x)
-
-	// holder가 release 해주는애임
-
-	// if(!list_empty(&lock -> semaphore.waiters)){
- 	// 	struct thread *next_waiter = get_thread(list_begin(&lock -> semaphore.waiters));
-
-	// 	// waiters의 첫 요소의 priority 확인해서 release 하는 thread보다 작으면
-	// 	if(next_waiter -> priority < lock -> holder -> priority){ 
-	// 		next_waiter -> priority = lock -> holder -> priority;
-	// 	}
-	// }
-
 	struct thread *cur_t = lock -> holder;
 	struct list *donations = &cur_t -> donations;
 	struct thread *t;
@@ -261,29 +244,10 @@ void lock_release (struct lock *lock) {
 			
 			if (t -> wait_on_lock == lock){
 			    list_remove(&t -> delem);
-				// Problem) priority-donate-one 해결됨 donations에 여러개 있나????
-				// 정상 흐름) main -> acq2 -> acq1
-				// break 흐름) main -> acq2 -> main -> acq1
-				// 해당 lock에서 받은 donations 다 제거 안해서 ready_list에서 donate 받은 우선순위로 점유중이였음
-				//break; 
 			}
 		}
-
-		// struct thread *cur_t = get_thread_delem(list_begin(donations));
-		// struct thread *last_t = get_thread_delem(list_end(donations));
-
-		// while(last_t != cur_t){
-		// 	if(lock == cur_t -> wait_on_lock){
-		// 		list_remove(&cur_t -> delem);
-		// 		break;
-		// 	}
-
-		// 	cur_t = get_thread_delem(list_next(&cur_t -> delem));
-		// }
 	}
 
-	// release할 thread orginal priority로 복귀
-	// problem) priority-donate-one 해결되는 코드
 	update_priority(cur_t);
 	
 	lock -> holder = NULL;
@@ -345,7 +309,6 @@ void cond_wait (struct condition *cond, struct lock *lock) {
 	ASSERT (lock_held_by_current_thread (lock));
 
 	sema_init (&waiter.semaphore, 0);
-	//list_push_back (&cond->waiters, &waiter.elem);
 	list_insert_ordered(&cond->waiters, &waiter.elem, order_by_priority_sema, NULL);
 	lock_release (lock);
 	sema_down (&waiter.semaphore);
@@ -413,8 +376,6 @@ void update_priority(struct thread *cur_t){
 	cur_t -> priority = cur_t -> org_priority;
 
 	if(!list_empty(donations)) {
-		// thread_set_priority 때문에 sort 해줘야 할듯 중간에 값 바꿔버리면 엉키는데
-		// list_sort 대신 list_insert_ordered 사용해도 될거 같은데 remove하고 다시 insert하는거랑 많이 차이날까?
 		list_sort(donations, order_by_priority_delem, NULL);
 		cur_t -> priority = get_thread_delem(list_begin(donations)) -> priority;
 

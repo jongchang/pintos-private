@@ -1,5 +1,6 @@
 #ifndef USERPROG_PROCESS_H
 #define USERPROG_PROCESS_H
+#define SPACE " "
 
 #include "threads/thread.h"
 

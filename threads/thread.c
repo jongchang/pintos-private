@@ -313,7 +313,6 @@ void thread_set_priority (int new_priority) {
 	struct thread *cur_t = thread_current ();
 	
 	cur_t -> priority = new_priority;
-	// 이 녀석이 만악의 근원(test code에서 직접적으로 바꿔주면서 org 값도 변경해줘야함)
 	cur_t -> org_priority = new_priority;
 
 	cmp_cur_and_ready();
@@ -484,6 +483,7 @@ thread_launch (struct thread *th) {
 	 * until switching is done. */
 	__asm __volatile (
 			/* Store registers that will be used. */
+			// 스택에 레지스터를 푸시 했다가 
 			"push %%rax\n"
 			"push %%rbx\n"
 			"push %%rcx\n"
@@ -623,29 +623,13 @@ void thread_wakeup(int64_t cur_tick){
 	struct list_elem *e;
 	struct thread *t;
 
-	// Problem) alarm-simultaneous 문제 리스트 pop_front하고 list_next 한게 문제로 식별됨
-	// if(!list_empty(&sleep_list)){
-	// 	for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
-	// 		t = get_thread(e); 
-			
-	// 		if(t -> wake_up_tick <= cur_tick){
-	// 			list_pop_front(&sleep_list);
-	// 			thread_unblock(t);
-	// 		} else {
-	// 			break;
-	// 		}
-	// 	}
-	// }
-
 	while(!list_empty(&sleep_list)){
 		t = get_thread(list_begin(&sleep_list));
 
 		if(t -> wake_up_tick <= cur_tick){
 			list_pop_front(&sleep_list);
 			thread_unblock(t);
-		} else {
-			break;
-		}
+		} else break;
 	}
 }
 
@@ -653,7 +637,6 @@ void cmp_cur_and_ready(){
 	struct thread *cur_t = thread_current();
 	struct thread *front = get_thread(list_begin(&ready_list)); 
 
-	// Problem) 이거 넣고 priority-donate-multiple1, 2 2개 (PASS) & priority-change 1개(FAIL)
 	update_priority(cur_t);
 
 	if(cur_t -> priority < front -> priority){

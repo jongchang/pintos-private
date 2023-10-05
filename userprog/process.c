@@ -164,6 +164,7 @@ int
 process_exec (void *f_name) {
 	char *file_name = f_name;
 	bool success;
+	char *nxt_ptr;
 
 	/* We cannot use the intr_frame in the thread structure.
 	 * This is because when current thread rescheduled,
@@ -177,6 +178,8 @@ process_exec (void *f_name) {
 	process_cleanup ();
 
 	/* And then load the binary */
+	file_name = strtok_r(file_name, SPACE, &nxt_ptr);
+	// arguments는 어디에 담지?
 	success = load (file_name, &_if);
 
 	/* If load failed, quit. */
