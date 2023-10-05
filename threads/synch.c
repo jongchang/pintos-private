@@ -113,6 +113,7 @@ void sema_up (struct semaphore *sema) {
 	}
 	sema->value++;
 	cmp_cur_and_ready();
+
 	intr_set_level (old_level);
 }
 
@@ -320,8 +321,8 @@ struct semaphore_elem *get_sema_elem(struct list_elem *e){
 }
 
 bool order_by_priority_sema(const struct list_elem *a, const struct list_elem *b, void *aux){
-	struct thread *t1 = get_thread(list_begin(&get_sema_elem(a) -> semaphore.waiters));
-	struct thread *t2 = get_thread(list_begin(&get_sema_elem(b) -> semaphore.waiters));
+	struct thread *t1 = get_front(&get_sema_elem(a) -> semaphore.waiters);
+	struct thread *t2 = get_front(&get_sema_elem(b) -> semaphore.waiters);
 
 	return t1 -> priority > t2 -> priority;
 }
@@ -371,6 +372,9 @@ void donate_priority(struct thread *cur_t) {
 }
 
 void update_priority(struct thread *cur_t){
+	if(intr_context()){
+		return;
+	}
 	struct list *donations = &cur_t -> donations;
 
 	cur_t -> priority = cur_t -> org_priority;

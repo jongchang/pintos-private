@@ -155,5 +155,6 @@ bool order_by_tick(const struct list_elem *a, const struct list_elem *b, void *a
 bool order_by_priority(const struct list_elem *a, const struct list_elem *b, void *aux);
 void cmp_cur_and_ready();
 struct thread *get_thread(struct list_elem *e);
+struct thread *get_front(struct list *list);
 
 #endif /* threads/thread.h */
