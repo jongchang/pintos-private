@@ -160,11 +160,14 @@ error:
 
 /* Switch the current execution context to the f_name.
  * Returns -1 on fail. */
-int
-process_exec (void *f_name) {
+int process_exec (void *f_name) {
 	char *file_name = f_name;
 	bool success;
+	int tok_cnt = 0;
+	char *token;
 	char *nxt_ptr;
+	char *args[64];
+	char *temp_argv[128] = {0,};
 
 	/* We cannot use the intr_frame in the thread structure.
 	 * This is because when current thread rescheduled,
@@ -178,9 +181,55 @@ process_exec (void *f_name) {
 	process_cleanup ();
 
 	/* And then load the binary */
-	file_name = strtok_r(file_name, SPACE, &nxt_ptr);
-	// arguments는 어디에 담지?
-	success = load (file_name, &_if);
+	token = strtok_r(file_name, SPACE, &nxt_ptr);
+	file_name = token;
+
+	while(token){
+		token = strtok_r(NULL, SPACE, &nxt_ptr);
+		args[tok_cnt++] = token;
+	}
+
+	success = load(file_name, &_if);
+
+	char *sp = (char *)USER_STACK;
+	printf("start = %d\n", sp);
+
+	for (int i = tok_cnt - 2; i >= 0; i--){
+		int len = strlen(args[i]) + 1;
+
+		sp -= len;
+		memcpy(sp, args[i], len);
+		args[i] = sp;
+		printf("args[%d] = %d\n", i, sp);
+	}
+	
+	while((unsigned int)sp % 8 != 0){
+		sp--;
+	}
+
+	sp -= 8;
+	
+	//sp = (char *)(((uint64_t)sp) & ~0xf);
+	printf("align = %d\n", sp);
+	sp -= 8;
+	*sp = NULL;
+	printf("null = %d\n", sp);
+
+	for (int i = tok_cnt - 2; i >= 0; i--){
+		sp -= 8;
+		*sp = args[i];
+		printf("args[%d] = %d\n", i, sp);
+	}
+
+	sp -= 8;
+	*sp = NULL;
+	sp += 8;
+
+	_if.R.rdi = tok_cnt;
+	_if.R.rsi = (char *) sp;
+	_if.rsp = sp;
+
+	hex_dump(_if.rsp, _if.rsp, USER_STACK - _if.rsp, true);
 
 	/* If load failed, quit. */
 	palloc_free_page (file_name);
@@ -202,11 +251,12 @@ process_exec (void *f_name) {
  *
  * This function will be implemented in problem 2-2.  For now, it
  * does nothing. */
-int
-process_wait (tid_t child_tid UNUSED) {
+int process_wait (tid_t child_tid UNUSED) {
 	/* XXX: Hint) The pintos exit if process_wait (initd), we recommend you
 	 * XXX:       to add infinite loop here before
 	 * XXX:       implementing the process_wait. */
+	while(1){}
+
 	return -1;
 }
 

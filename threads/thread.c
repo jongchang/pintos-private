@@ -206,8 +206,7 @@ tid_t thread_create (const char *name, int priority, thread_func *function, void
 
 	/* Add to run queue. */
 	thread_unblock (t);
-	//cmp_cur_and_ready();
-	thread_yield();
+	cmp_cur_and_ready();
 
 	return tid;
 }
