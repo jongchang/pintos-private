@@ -192,7 +192,6 @@ int process_exec (void *f_name) {
 	success = load(file_name, &_if);
 
 	char *sp = (char *)USER_STACK;
-	printf("start = %d\n", sp);
 
 	for (int i = tok_cnt - 2; i >= 0; i--){
 		int len = strlen(args[i]) + 1;
@@ -200,24 +199,17 @@ int process_exec (void *f_name) {
 		sp -= len;
 		memcpy(sp, args[i], len);
 		args[i] = sp;
-		printf("args[%d] = %d\n", i, sp);
 	}
 	
-	while((unsigned int)sp % 8 != 0){
-		sp--;
+	while ((unsigned int)sp % 16 != 0) {
+    	sp--;
 	}
 
-	sp -= 8;
-	
-	//sp = (char *)(((uint64_t)sp) & ~0xf);
-	printf("align = %d\n", sp);
-	sp -= 8;
-	*sp = NULL;
-	printf("null = %d\n", sp);
+	*sp = 0;
 
 	for (int i = tok_cnt - 2; i >= 0; i--){
 		sp -= 8;
-		*sp = args[i];
+		*((uint64_t *)sp) = (uint64_t)args[i];
 		printf("args[%d] = %d\n", i, sp);
 	}
 
